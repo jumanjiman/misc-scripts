@@ -1,0 +1,69 @@
+#!/bin/bash -x
+
+# source this file in your scripts to 
+# make use of these functions
+
+
+function shortname() {
+  # this function avoids ugliness that happens
+  # if you use `hostname -s` with a fubar /etc/resolv.conf
+  _shortname=$(hostname)
+  echo ${_shortname%%.*}
+}
+
+
+function complain() {
+  # usage: complain $1 $2
+  # $1 = i|w|e info|warn|error
+  # $2 = a quoted string message
+
+  prog=$(basename $0)
+
+  if [ $# -lt 2 ]; then
+    echo "scripting error - complain needs at least two args" >&2
+    exit 1
+  fi
+  case $1 in
+   i) prefix="INFO: ";;
+   w) prefix="WARN: ";;
+   e) prefix="ERROR: ";;
+   *) 
+      echo "scripting error - complain needs a prefix" >&2
+      exit 2
+      ;;
+  esac
+  msg="$prefix $2"
+  /bin/logger -t $prog "$msg"
+  echo $msg >&2
+}
+
+
+function abort() {
+  # $1 should be an exit code > 0 and <= 255
+  # $2 should be a quoted string
+  if [ $# -lt 2 ]; then
+    echo "scripting error - abort needs at least two args" >&2
+    exit 1
+  fi
+  if ! [ $1 -ge 0 -a $1 -lt 256 ]; then
+    echo "scripting error - \$1 must be between 0 and 255 calling abort" >&2
+    exit 1
+  fi
+  complain e "$2"
+  exit $1
+}
+
+
+function name2ip() {
+  # $1 should be a hostname, fqdn or short
+  ip=$(host $1 | awk '/has address/{print $NF}')
+  if [ "x$ip" = "x" ]; then
+    retcode=1
+  elif [ $(echo $ip | wc -w) -gt 1 ]; then
+    retcode=1
+  else
+    retcode=0
+  fi
+  echo $ip
+  return $retcode
+}
