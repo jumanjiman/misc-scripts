@@ -20,7 +20,7 @@ is_svnrepo() {
   return $?
 }
 
-hooks_dirs="$(find $base_dir -name hooks 2> /dev/null)"
+hooks_dirs="$(find $base_dir -type d -name hooks 2> /dev/null)"
 for dir in $hooks_dirs; do
   repo="$(dirname $dir)"
   is_svnrepo $repo && echo $repo
