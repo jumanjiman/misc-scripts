@@ -17,9 +17,13 @@ is_gitrepo() {
   # returns 0 if $1 is a git repo
   # $1 should be path to directory
   _path=$1
-  pushd $_path &> /dev/null
-  git tag &> /dev/null
-  return $?
+  {
+  pushd $_path
+  git tag
+  _rc=$?
+  popd
+  } &> /dev/null
+  return $_rc
 }
 
 git_dirs="$(find $base_dir -type d -name .git 2> /dev/null)"
