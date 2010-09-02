@@ -17,12 +17,10 @@ is_gitrepo() {
   # returns 0 if $1 is a git repo
   # $1 should be path to directory
   _path=$1
-  {
-  pushd $_path
-  git tag
+  pushd $_path &> /dev/null
+  [ -d $_path/.git ]
   _rc=$?
-  popd
-  } &> /dev/null
+  popd &> /dev/null
   return $_rc
 }
 
