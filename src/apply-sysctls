@@ -1,0 +1,83 @@
+#!/bin/bash
+
+# See configs/overcommit.conf for a sample config file
+
+prog=$(basename $0)
+
+function usage () {
+  cat >&2 <<- EOF
+	Usage: $prog [-a] [-V] path/to/file
+	  -a Apply sysctls from file
+	  -h Help (this screen)
+	  -V Verify sysctls from file
+	EOF
+}
+
+# error codes
+declare rc_syntax_error=150
+declare rc_config_unreadable=151
+declare rc_verify_failed=152
+declare rc_redirect_failed=153
+declare rc_sysctl_err=154
+
+# defaults
+_apply=false
+_verify=false
+
+while getopts "ahV" option
+do
+  case $option in
+    a ) _apply="true";;
+    V ) _verify="true";;
+    h ) usage; exit 0;;
+    * ) usage; exit $rc_syntax_error;;
+  esac
+done
+
+shift $(($OPTIND - 1))
+#  Decrements the argument pointer so it points to next argument.
+#  $1 now references the first non option item supplied on the command line
+#  if one exists.
+config="${1}"
+
+[[ -r $config ]] || exit $rc_config_unreadable
+
+# redirect stdin from config
+exec 0< $config || exit $rc_redirect_failed
+
+rc=0
+while read line; do
+  grep -E '^[[:alpha:]]' <<< $line &> /dev/null
+  if [ $? -eq 0 ]; then
+    # we have a usable line
+
+    if [ $_apply = true ]; then
+      # apply sysctl
+      output=$(/sbin/sysctl -w $(tr -d \  <<< $line) 2>&1)
+      if [ $? -ne 0 ]; then
+        rc=$rc_sysctl_err
+        logger -st $prog "$output"
+      fi
+    fi
+
+    if [ $_verify = true ]; then
+      # verify sysctl
+
+      # get desired key=value pair
+      key=$(awk '{print $1}'  <<< $line)
+      val1=$(awk '{print $NF}' <<< $line)
+
+      # get actual value
+      val2=$(/sbin/sysctl $key | awk '{print $NF}' 2> /dev/null)
+
+      # compare
+      if ! [[ $val1 = $val2 ]]; then
+        rc=$rc_sysctl_err
+        logger -st $prog "Error: $key should be $val1 but is currently $val2"
+      fi
+    fi
+
+  fi
+done
+
+exit $rc
