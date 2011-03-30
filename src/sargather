@@ -18,6 +18,8 @@ import subprocess # facilitate calls to bash
 import optparse   # CLI option handling
 import re         # regex
 import string     # string functions
+import sys        # system-level primitives, such as err
+import os         # work with files, dirs, etc.
 
 # defaults
 output_dir = "/tmp"
@@ -62,6 +64,13 @@ if options.start_time is None or options.end_time is None:
 sar_options = "-s " + options.start_time + " -e " + options.end_time
 if options.filename is not None:
 	sar_options += " -f " + options.filename
+
+if not os.path.exists (options.output_dir):
+	try:
+		os.makedirs (options.output_dir)
+	except Exception, err:
+		sys.stderr.write('error: %s\n' % str(err) )
+		exit (1)
 
 sar_cmd="LANG=C sar -A " + sar_options
 output = run_bash(sar_cmd)
