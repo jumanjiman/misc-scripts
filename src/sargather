@@ -19,17 +19,27 @@ import optparse
 
 global verbose
 global FILE
+global dir
 
 # configure CLI parser
 p = optparse.OptionParser (
-description = 'Gather sar data over a specified interval',
-prog = 'sargather',
-version = 'sargather 0.1',
-usage = '%prog [option]'
-)
+	description = 'Gather sar data over a specified interval',
+	prog = 'sargather',
+	usage = '%prog [option]'
+	)
 
 p.add_option('--file', '-f', dest="filename",
-help="read data from FILE", metavar="FILE")
+	help="read data from FILE", metavar="FILE")
+
+p.add_option('--start', '-s', dest="start_time",
+	help="START in HH:MM:SS", metavar="START")
+
+p.add_option('--end', '-e', dest="end_time",
+	help="END in HH:MM:SS", metavar="END")
+
+p.add_option('--dir', '-d', dest="dir",
+	help="DIR in which to save output data (defaults to /tmp)", metavar="DIR")
 
 # parse user options
 (options, args) = p.parse_args()
+
