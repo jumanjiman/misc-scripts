@@ -25,9 +25,23 @@ import os         # work with files, dirs, etc.
 output_dir = "/tmp"
 
 def run_bash (cmd):
-	proc=subprocess.Popen (cmd, shell=True, stdout=subprocess.PIPE)
-	out = proc.stdout.read().strip()
-	return out # stdout from the shell
+	"""
+	Runs a command, returning the return code, stdout, and stderr as a tuple.
+	NOT FOR USE WITH INTERACTIVE COMMANDS.
+	"""
+
+	try:
+		proc=subprocess.Popen (cmd, 
+			shell=True, 
+			stdout=subprocess.PIPE,
+			stderr=subprocess.PIPE,
+			close_fds=True
+			)
+		data=proc.communicate()
+		return (proc.returncode, data[0], data[1])
+	except Exception, err:
+		sys.stderr.write('error: %s\n' % str(err) )
+		exit (1)
 
 # configure and run CLI parser
 p = optparse.OptionParser (
@@ -74,4 +88,5 @@ if not os.path.exists (options.output_dir):
 
 sar_cmd="LANG=C sar -A " + sar_options
 output = run_bash(sar_cmd)
-print "%s" % output
+print "%s" % output[1]
+exit (output[0])
