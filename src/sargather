@@ -20,10 +20,7 @@ import re         # regex
 import string     # string functions
 
 # defaults
-start_time = "00:00:00"
-stop_time  = "23:59:59"
 output_dir = "/tmp"
-sar_file   = ""
 
 def run_bash (cmd):
 	proc=subprocess.Popen (cmd, shell=True, stdout=subprocess.PIPE)
@@ -42,12 +39,10 @@ p.add_option('--file', '-f', dest="filename",
 
 p.add_option('--start', '-s', dest="start_time",
 	help="START in HH:MM:SS",
-	default=start_time,
 	metavar="START")
 
 p.add_option('--end', '-e', dest="end_time",
 	help="END in HH:MM:SS",
-	default=stop_time,
 	metavar="END")
 
 p.add_option('--dir', '-d', dest="output_dir",
@@ -57,6 +52,11 @@ p.add_option('--dir', '-d', dest="output_dir",
 
 # parse user options
 (options, args) = p.parse_args()
+
+# sanity-check
+if options.start_time is None or options.end_time is None:
+	p.print_help()
+	exit(1)
 
 # construct basic sar options
 sar_options = "-s " + options.start_time + " -e " + options.end_time
