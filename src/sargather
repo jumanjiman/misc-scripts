@@ -14,14 +14,23 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 """
 
-import subprocess
-import optparse
+import subprocess # facilitate calls to bash
+import optparse   # CLI option handling
+import re         # regex
+import string     # string functions
 
-global verbose
-global FILE
-global dir
+# defaults
+start_time = "00:00:00"
+stop_time  = "23:59:59"
+output_dir = "/tmp"
+sar_file   = ""
 
-# configure CLI parser
+def run_bash (cmd):
+	proc=subprocess.Popen (cmd, shell=True, stdout=subprocess.PIPE)
+	out = proc.stdout.read().strip()
+	return out # stdout from the shell
+
+# configure and run CLI parser
 p = optparse.OptionParser (
 	description = 'Gather sar data over a specified interval',
 	prog = 'sargather',
@@ -32,14 +41,28 @@ p.add_option('--file', '-f', dest="filename",
 	help="read data from FILE", metavar="FILE")
 
 p.add_option('--start', '-s', dest="start_time",
-	help="START in HH:MM:SS", metavar="START")
+	help="START in HH:MM:SS",
+	default=start_time,
+	metavar="START")
 
 p.add_option('--end', '-e', dest="end_time",
-	help="END in HH:MM:SS", metavar="END")
+	help="END in HH:MM:SS",
+	default=stop_time,
+	metavar="END")
 
-p.add_option('--dir', '-d', dest="dir",
-	help="DIR in which to save output data (defaults to /tmp)", metavar="DIR")
+p.add_option('--dir', '-d', dest="output_dir",
+	help="DIR in which to save output data", 
+	default=output_dir,
+	metavar="DIR")
 
 # parse user options
 (options, args) = p.parse_args()
 
+# construct basic sar options
+sar_options = "-s " + options.start_time + " -e " + options.end_time
+if options.filename is not None:
+	sar_options += " -f " + options.filename
+
+sar_cmd="LANG=C sar -A " + sar_options
+output = run_bash(sar_cmd)
+print "%s" % output
