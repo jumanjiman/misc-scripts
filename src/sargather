@@ -94,9 +94,6 @@ p = optparse.OptionParser (
 	usage = '%prog [option]'
 	)
 
-p.add_option('--in', '-i', dest="filename",
-	help="read data from FILE", metavar="FILE")
-
 p.add_option('--start', '-s', dest="start_time",
 	help="START in HH:MM:SS",
 	metavar="START")
@@ -104,6 +101,10 @@ p.add_option('--start', '-s', dest="start_time",
 p.add_option('--end', '-e', dest="end_time",
 	help="END in HH:MM:SS",
 	metavar="END")
+
+# input file, if specified, must be sar raw data file
+p.add_option('--in', '-i', dest="filename",
+	help="read data from FILE", metavar="FILE")
 
 # print output to stdout unless user specifies -d
 p.add_option('--out', '-o', dest="output_dir",
