@@ -21,9 +21,6 @@ import string     # string functions
 import sys        # system-level primitives, such as err
 import os         # work with files, dirs, etc.
 
-# defaults
-output_dir = "/tmp"
-
 def run_bash (cmd):
 	"""
 	Runs a command, returning the return code, stdout, and stderr as a tuple.
@@ -108,9 +105,9 @@ p.add_option('--end', '-e', dest="end_time",
 	help="END in HH:MM:SS",
 	metavar="END")
 
+# print output to stdout unless user specifies -d
 p.add_option('--dir', '-d', dest="output_dir",
 	help="DIR in which to save output data", 
-	default=output_dir,
 	metavar="DIR")
 
 # parse user options
@@ -126,21 +123,34 @@ sar_options = "-s " + options.start_time + " -e " + options.end_time
 if options.filename is not None:
 	sar_options += " -f " + options.filename
 
-if not os.path.exists (options.output_dir):
-	try:
-		os.makedirs (options.output_dir)
-	except Exception, err:
-		sys.stderr.write('error: %s\n' % str(err) )
-		exit (1)
+if options.output_dir is not None:
+	# attempt to make full dir path
+	if not os.path.exists (options.output_dir):
+		try:
+			os.makedirs (options.output_dir)
+		except Exception, err:
+			sys.stderr.write('error: %s\n' % str(err) )
+			exit (1)
 
 for tuple in sar_checks():
 	try:
 		output = run_bash ("LANG=C sar " + tuple[0] + " " + sar_options + " | grep -v Average | grep -v Linux | grep -v '^$'")
-		print "======= %s =======" % tuple[1]
-		if output[0] == 0:
-			print "%s" % output[1]
+		if options.output_dir is None:
+			# print to stdout
+			print "======= %s =======" % tuple[1]
+			if output[0] == 0:
+				print "%s" % output[1]
+			else:
+				print "%s" % output[2]
 		else:
-			print "%s" % output[2]
+			# store data in files within output_dir
+			file_path = options.output_dir + os.sep + tuple[1]
+			output_file = open (file_path, "w")
+			if output[0] == 0:
+				output_file.writelines (output[1])
+			else:
+				output_file.writelines (output[2])
+			output_file.close
 	except (KeyboardInterrupt, SystemExit):
 		print ""
 		exit (1)
