@@ -128,4 +128,7 @@ tests=(
 for tuple in tests:
 	output = run_bash ("LANG=C sar " + tuple[0] + " " + sar_options + " | grep -v Average | grep -v Linux")
 	print "======= %s =======" % tuple[1]
-	print "%s" % output[1]
+	if output[0] == 0:
+		print "%s" % output[1]
+	else:
+		print "%s" % output[2]
