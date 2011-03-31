@@ -86,7 +86,46 @@ if not os.path.exists (options.output_dir):
 		sys.stderr.write('error: %s\n' % str(err) )
 		exit (1)
 
-sar_cmd="LANG=C sar -A " + sar_options
-output = run_bash(sar_cmd)
-print "%s" % output[1]
-exit (output[0])
+# define tests as tuples
+# sar_option   description
+# ----------   -----------
+tests=(
+[ "-b",        "io"                  ],
+[ "-B",        "paging"              ],
+[ "-d",        "block_device"        ],
+[ "-q",        "runqueue"            ],
+[ "-r",        "memory"              ],
+[ "-R",        "rate_of_memory"      ],
+[ "-S",        "swap_capacity"       ],
+[ "-v",        "buffer_cache"        ],
+[ "-w",        "task_creation"       ],
+[ "-W",        "swap_rate"           ],
+[ "-y",        "serial_tty"          ],
+[ "-I SUM",    "interrupt_summary"   ],
+[ "-I XALL",   "interrupt_all"       ],
+[ "-n NFS",    "nfs_client"          ],
+[ "-n NFSD",   "nfs_server"          ],
+[ "-n DEV",    "network_dev"         ],
+[ "-n EDEV",   "network_errors"      ],
+[ "-n SOCK",   "network_sockets"     ],
+[ "-n IP",     "network_ip"          ],
+[ "-n EIP",    "network_ip"          ],
+[ "-n ICMP",   "network_icmp"        ],
+[ "-n EICMP",  "network_eicmp"       ],
+[ "-n TCP",    "network_tcp"         ],
+[ "-n ETCP",   "network_etcp"        ],
+[ "-n UDP",    "network_udp"         ],
+[ "-n SOCK6",  "network_sockets_ip6" ],
+[ "-n IP6",    "network_ip6"         ],
+[ "-n EIP6",   "network_eip6"        ],
+[ "-n ICMP6",  "network_icmp6"       ],
+[ "-n EICMP6", "network_eicmp6"      ],
+[ "-n UDP6",   "network_udp6"        ],
+[ "-u ALL",    "cpu_utilization"     ],
+[ "-P ALL",    "cpu_stats"           ]
+)
+
+for tuple in tests:
+	output = run_bash ("LANG=C sar " + tuple[0] + " " + sar_options + " | grep -v Average | grep -v Linux")
+	print "======= %s =======" % tuple[1]
+	print "%s" % output[1]
