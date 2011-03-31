@@ -94,7 +94,7 @@ p = optparse.OptionParser (
 	usage = '%prog [option]'
 	)
 
-p.add_option('--file', '-f', dest="filename",
+p.add_option('--in', '-i', dest="filename",
 	help="read data from FILE", metavar="FILE")
 
 p.add_option('--start', '-s', dest="start_time",
@@ -106,7 +106,7 @@ p.add_option('--end', '-e', dest="end_time",
 	metavar="END")
 
 # print output to stdout unless user specifies -d
-p.add_option('--dir', '-d', dest="output_dir",
+p.add_option('--out', '-o', dest="output_dir",
 	help="DIR in which to save output data", 
 	metavar="DIR")
 
