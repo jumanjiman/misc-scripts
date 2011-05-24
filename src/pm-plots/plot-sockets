@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# create a file with gnuplot commands
+gnuplot - &> /dev/null << EOF
+set term png crop
+set output 'sockets.png'
+set xdata time
+set timefmt '%H:%M:%S'
+set xlabel 'time'
+set format x '%H:%M:%S'
+set xtics rotate
+set ylabel 'sockets'
+plot [] [0:] \\
+'network_sockets' u 1:2 smooth csplines t 'sockets' with lines
+EOF

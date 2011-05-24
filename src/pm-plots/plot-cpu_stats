@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# column heading for cpu_stats
+# 14:31:00          CPU     %user     %nice   %system   %iowait    %steal     %idle
+
+scratchdir=$(mktemp -d /tmp/cpu_stats.XXXXXXX)
+
+# create an incomplete file with gnuplot commands
+cat > $scratchdir/cpu_stats.gplot << EOF
+set term png crop
+set output 'cpu_utilization.png'
+set xdata time
+set timefmt '%H:%M:%S'
+set xlabel 'time'
+set format x '%H:%M:%S'
+set xtics rotate
+set ylabel 'cpu utilization'
+plot [] [0:100] \\
+EOF
+
+cpus="$(awk '{print $2}' cpu_stats  | sort -u | grep -v CPU)"
+cpu_count=$(wc -w <<< $cpus)
+count=0
+
+for cpu in $cpus; do
+  count=$(( $count + 1 ))
+
+  # get cpu-specific data
+  awk "\$2 ~ /$cpu/{print \$1, (100-\$NF)}" cpu_stats > $scratchdir/$cpu
+
+  # plot each cpu as a separate spline
+  if [ $count -lt $cpu_count ]; then
+    cat >> $scratchdir/cpu_stats.gplot << EOF
+'$scratchdir/$cpu' u 1:2 smooth csplines t 'cpu$cpu' with lines, \\
+EOF
+  else
+    cat >> $scratchdir/cpu_stats.gplot << EOF
+'$scratchdir/$cpu' u 1:2 smooth csplines t 'cpu$cpu' with lines
+EOF
+  fi
+done
+
+gnuplot $scratchdir/cpu_stats.gplot
+
+# show the scratchdir
+rm -fr $scratchdir

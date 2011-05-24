@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# column heading for network_dev
+# 14:31:00          CPU     %user     %nice   %system   %iowait    %steal     %idle
+
+scratchdir=$(mktemp -d /tmp/network_dev.XXXXXXX)
+
+# create an incomplete file with gnuplot commands
+cat > $scratchdir/network_dev.gplot << EOF
+set term png crop
+set output 'network_dev.png'
+set xdata time
+set timefmt '%H:%M:%S'
+set xlabel 'time'
+set format x '%H:%M:%S'
+set xtics rotate
+set ylabel 'network'
+plot [] [0:] \\
+EOF
+
+nics="$(awk '{print $2}' network_dev  | sort -u | grep -v 'lo' | grep -v IFACE)"
+nic_count=$(wc -w <<< $nics)
+count=0
+
+for nic in $nics; do
+  count=$(( $count + 1 ))
+
+  # create a data file for each nic
+  awk "\$2 ~ /$nic/" network_dev > $scratchdir/$nic
+
+  # plot each nic as a separate spline
+  if [ $count -lt $nic_count ]; then
+    cat >> $scratchdir/network_dev.gplot << EOF
+'$scratchdir/$nic' u 1:5 smooth csplines t '$nic receive bytes/sec' with lines, \\
+'$scratchdir/$nic' u 1:6 smooth csplines t '$nic transmit bytes/sec' with lines, \\
+EOF
+  else
+    cat >> $scratchdir/network_dev.gplot << EOF
+'$scratchdir/$nic' u 1:5 smooth csplines t '$nic receive bytes/sec' with lines, \\
+'$scratchdir/$nic' u 1:6 smooth csplines t '$nic transmit bytes/sec' with lines
+EOF
+  fi
+done
+
+gnuplot $scratchdir/network_dev.gplot
+
+# show the scratchdir
+rm -fr $scratchdir

@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# create a file with gnuplot commands
+gnuplot - &> /dev/null << EOF
+set term png crop
+set output 'io.png'
+set xdata time
+set timefmt '%H:%M:%S'
+set xlabel 'time'
+set format x '%H:%M:%S'
+set xtics rotate
+set ylabel 'block io'
+plot [] [0:] \\
+'io' u 1:5 smooth csplines t 'blocks read/sec' with lines, \\
+'io' u 1:6 smooth csplines t 'blocks written/sec' with lines
+EOF

@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# column heading for task_creation
+# 14:31:00          cswchs/sec
+
+# create a file with gnuplot commands
+gnuplot - &> /dev/null << EOF
+set term png crop
+set output 'context-switches.png'
+set xdata time
+set timefmt '%H:%M:%S'
+set xlabel 'time'
+set format x '%H:%M:%S'
+set xtics rotate
+set ylabel 'context-switches per second'
+plot [] [0:] \\
+'task_creation' u 1:2 smooth csplines t 'context switches/sec' with lines
+EOF

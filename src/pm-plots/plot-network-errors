@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# column heading for network_errors
+# 14:31:00          CPU     %user     %nice   %system   %iowait    %steal     %idle
+
+scratchdir=$(mktemp -d /tmp/network_errors.XXXXXXX)
+
+# create an incomplete file with gnuplot commands
+cat > $scratchdir/network_errors.gplot << EOF
+set term png crop
+set output 'network_errors.png'
+set xdata time
+set timefmt '%H:%M:%S'
+set xlabel 'time'
+set format x '%H:%M:%S'
+set xtics rotate
+set ylabel 'network'
+plot [] [0:] \\
+EOF
+
+nics="$(awk '{print $2}' network_errors  | sort -u | grep -v 'lo' | grep -v IFACE)"
+nic_count=$(wc -w <<< $nics)
+count=0
+
+for nic in $nics; do
+  count=$(( $count + 1 ))
+
+  # create a data file for each nic
+  awk "\$2 ~ /$nic/{print \$1, (\$3 + \$4 + \$5 + \$6 + \$7 + \$8 + \$9 + \$10 + \$11)}" network_errors > $scratchdir/$nic
+
+  # plot each nic as a separate spline
+  if [ $count -lt $nic_count ]; then
+    cat >> $scratchdir/network_errors.gplot << EOF
+'$scratchdir/$nic' u 1:2 smooth csplines t '$nic errors/sec' with lines, \\
+EOF
+  else
+    cat >> $scratchdir/network_errors.gplot << EOF
+'$scratchdir/$nic' u 1:2 smooth csplines t '$nic errors/sec' with lines
+EOF
+  fi
+done
+
+gnuplot $scratchdir/network_errors.gplot
+
+# show the scratchdir
+rm -fr $scratchdir
+#echo $scratchdir
