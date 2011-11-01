@@ -7,6 +7,7 @@ scratchdir=$(mktemp -d /tmp/cpu_stats.XXXXXXX)
 
 # create an incomplete file with gnuplot commands
 cat > $scratchdir/cpu_stats.gplot << EOF
+set title "$(basename $PWD)"
 set term png crop
 set output 'cpu_utilization.png'
 set xdata time

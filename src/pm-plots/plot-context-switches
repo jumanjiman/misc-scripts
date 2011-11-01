@@ -5,6 +5,7 @@
 
 # create a file with gnuplot commands
 gnuplot - &> /dev/null << EOF
+set title "$(basename $PWD)"
 set term png crop
 set output 'context-switches.png'
 set xdata time

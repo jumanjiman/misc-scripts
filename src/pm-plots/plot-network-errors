@@ -7,6 +7,7 @@ scratchdir=$(mktemp -d /tmp/network_errors.XXXXXXX)
 
 # create an incomplete file with gnuplot commands
 cat > $scratchdir/network_errors.gplot << EOF
+set title "$(basename $PWD)"
 set term png crop
 set output 'network_errors.png'
 set xdata time

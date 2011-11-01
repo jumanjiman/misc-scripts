@@ -2,6 +2,7 @@
 
 # create a file with gnuplot commands
 gnuplot - &> /dev/null << EOF
+set title "$(basename $PWD)"
 set term png crop
 set output 'paging.png'
 set xdata time
